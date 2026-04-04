@@ -1,0 +1,35 @@
+### Build Tools ###
+target/
+build/
+.gradle/
+bin/
+out/
+
+### Spring Boot Specifics ###
+.sts4-cache/
+.springBeans
+*.properties.local
+*.yml.local
+.env
+dependency-reduced-pom.xml
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Eclipse ###
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+
+### VS Code ###
+.vscode/
+
+### System Files ###
+.DS_Store
+Thumbs.db
