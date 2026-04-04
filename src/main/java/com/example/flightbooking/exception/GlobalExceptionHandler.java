@@ -3,6 +3,8 @@ package com.example.flightbooking.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -18,6 +20,7 @@ import java.util.Map;
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(FlightNotFoundException.class)
     public ResponseEntity<ApiError> handleFlightNotFound(
@@ -50,6 +53,20 @@ public class GlobalExceptionHandler {
                 "Validation failed",
                 request.getRequestURI(),
                 fieldErrors
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleUnexpectedError(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+        log.error("Unhandled exception for request path {}", request.getRequestURI(), ex);
+        return buildError(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred",
+                request.getRequestURI(),
+                null
         );
     }
 

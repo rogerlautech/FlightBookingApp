@@ -47,10 +47,9 @@ public class BookingService {
      *
      * Concurrency approach:
      * - Each flight's remaining seats are tracked with a dedicated AtomicInteger.
-     * - decrementAndGet() is atomic, so concurrent callers cannot corrupt the counter.
-     * - If the atomic decrement result is negative, this call attempted to book past capacity.
-     *   We immediately incrementAndGet() to revert this call's decrement and throw
-     *   NoSeatsAvailableException.
+     * - We reserve seats with a compare-and-set (CAS) loop:
+     *   read current seats -> fail fast if 0 -> atomically update current to current-1.
+     * - If another thread changed the value between read and write, CAS fails and we retry.
      * - This guarantees no overbooking, including concurrent requests racing for the last seat.
      *
      * @param request booking input containing known flight number and passenger name
@@ -64,11 +63,15 @@ public class BookingService {
             throw new FlightNotFoundException("Flight not found: " + flightNumber);
         }
 
-        int seatsAfterDecrement = remainingSeats.decrementAndGet();
-        if (seatsAfterDecrement < 0) {
-            // Revert only this failed attempt; another thread may have legitimately taken the last seat.
-            remainingSeats.incrementAndGet();
-            throw new NoSeatsAvailableException("No seats available for flight: " + flightNumber);
+        // Lock-free reservation loop for this flight counter.
+        while (true) {
+            int current = remainingSeats.get();
+            if (current <= 0) {
+                throw new NoSeatsAvailableException("No seats available for flight: " + flightNumber);
+            }
+            if (remainingSeats.compareAndSet(current, current - 1)) {
+                break;
+            }
         }
 
         String bookingId = generateBookingId();

@@ -4,6 +4,7 @@ import com.example.flightbooking.dto.BookingRequest;
 import com.example.flightbooking.dto.BookingResponse;
 import com.example.flightbooking.service.BookingService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,6 +33,6 @@ public class BookingController {
     @PostMapping
     public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody BookingRequest request) {
         BookingResponse response = bookingService.bookTicket(request);
-        return ResponseEntity.status(201).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
