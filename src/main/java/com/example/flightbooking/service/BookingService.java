@@ -14,6 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Core booking logic with in-memory, thread-safe seat management.
+ *
+ * <p>This service owns all mutable booking state for the assignment and is
+ * responsible for preventing overbooking under concurrent requests.</p>
  */
 @Service
 @Slf4j
@@ -34,6 +37,8 @@ public class BookingService {
 
     /**
      * Loads a small static flight catalog for the interview assignment.
+     *
+     * <p>Runs once after bean construction and before serving requests.</p>
      */
     @PostConstruct
     void initializeFlights() {
@@ -56,6 +61,8 @@ public class BookingService {
      *
      * @param request booking input containing known flight number and passenger name
      * @return booking confirmation payload
+     * @throws FlightNotFoundException when the flight number does not exist
+     * @throws NoSeatsAvailableException when no seats remain for the flight
      */
     public BookingResponse bookTicket(BookingRequest request) {
         String flightNumber = request.flightNumber();
@@ -97,6 +104,12 @@ public class BookingService {
         return response;
     }
 
+    /**
+     * Produces a unique booking identifier using a thread-safe monotonically
+     * increasing sequence and uppercase hexadecimal formatting.
+     *
+     * @return booking identifier in the form {@code BK-XXXXXXXX}
+     */
     private String generateBookingId() {
         return "BK-%08X".formatted(bookingSequence.incrementAndGet());
     }

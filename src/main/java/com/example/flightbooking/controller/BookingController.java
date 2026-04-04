@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST endpoints for flight ticket booking operations.
+ *
+ * <p>The controller intentionally stays thin and delegates booking rules and
+ * concurrency handling to {@link BookingService}.</p>
  */
 @RestController
 @RequestMapping("/api/bookings")
@@ -22,6 +25,11 @@ public class BookingController {
 
     private final BookingService bookingService;
 
+    /**
+     * Creates a controller with service dependency injected by Spring.
+     *
+     * @param bookingService application service that executes booking logic
+     */
     public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
     }
@@ -29,8 +37,10 @@ public class BookingController {
     /**
      * Creates a booking for a known flight.
      *
-     * @param request booking payload
-     * @return booking confirmation with HTTP 201
+     * @param request validated booking payload from request body
+     * @return booking confirmation payload with HTTP status {@code 201 Created}
+     * @throws com.example.flightbooking.exception.FlightNotFoundException when flight number does not exist
+     * @throws com.example.flightbooking.exception.NoSeatsAvailableException when the flight has no remaining seats
      */
     @PostMapping
     public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody BookingRequest request) {

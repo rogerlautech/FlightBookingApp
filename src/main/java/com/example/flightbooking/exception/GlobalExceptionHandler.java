@@ -22,6 +22,13 @@ import java.util.Map;
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /**
+     * Maps missing-flight domain errors to HTTP 404.
+     *
+     * @param ex thrown domain exception
+     * @param request current HTTP request
+     * @return standardized error response with {@code 404 Not Found}
+     */
     @ExceptionHandler(FlightNotFoundException.class)
     public ResponseEntity<ApiError> handleFlightNotFound(
             FlightNotFoundException ex,
@@ -30,6 +37,13 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI(), null);
     }
 
+    /**
+     * Maps sold-out-flight domain errors to HTTP 409.
+     *
+     * @param ex thrown domain exception
+     * @param request current HTTP request
+     * @return standardized error response with {@code 409 Conflict}
+     */
     @ExceptionHandler(NoSeatsAvailableException.class)
     public ResponseEntity<ApiError> handleNoSeatsAvailable(
             NoSeatsAvailableException ex,
@@ -38,6 +52,14 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI(), null);
     }
 
+    /**
+     * Maps request payload validation failures to HTTP 400 and includes
+     * field-level error details.
+     *
+     * @param ex thrown validation exception
+     * @param request current HTTP request
+     * @return standardized error response with {@code 400 Bad Request}
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidationError(
             MethodArgumentNotValidException ex,
@@ -56,6 +78,14 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * Provides a safe fallback for uncaught exceptions while logging details
+     * for server-side diagnostics.
+     *
+     * @param ex unexpected exception
+     * @param request current HTTP request
+     * @return standardized error response with {@code 500 Internal Server Error}
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpectedError(
             Exception ex,
@@ -70,6 +100,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * Builds the common JSON error payload used across all handlers.
+     *
+     * @param status HTTP status to return
+     * @param message client-facing error message
+     * @param path request path that triggered the error
+     * @param details optional structured details (for example validation field errors)
+     * @return response entity with uniform error structure
+     */
     private ResponseEntity<ApiError> buildError(
             HttpStatus status,
             String message,
@@ -89,6 +128,13 @@ public class GlobalExceptionHandler {
 
     /**
      * Uniform JSON error contract for all handled exceptions.
+     *
+     * @param timestamp ISO-8601 UTC time when the error response is generated
+     * @param status numeric HTTP status code
+     * @param error HTTP reason phrase
+     * @param message client-facing description of the problem
+     * @param path request URI path
+     * @param details optional key/value details such as validation errors
      */
     public record ApiError(
             String timestamp,

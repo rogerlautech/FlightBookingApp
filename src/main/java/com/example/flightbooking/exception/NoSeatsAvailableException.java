@@ -5,6 +5,11 @@ package com.example.flightbooking.exception;
  */
 public class NoSeatsAvailableException extends RuntimeException {
 
+    /**
+     * Creates the exception with a client-safe error message.
+     *
+     * @param message descriptive reason including the exhausted flight number
+     */
     public NoSeatsAvailableException(String message) {
         super(message);
     }

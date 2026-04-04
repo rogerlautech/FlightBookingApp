@@ -5,6 +5,11 @@ package com.example.flightbooking.exception;
  */
 public class FlightNotFoundException extends RuntimeException {
 
+    /**
+     * Creates the exception with a client-safe error message.
+     *
+     * @param message descriptive reason including the missing flight number
+     */
     public FlightNotFoundException(String message) {
         super(message);
     }
