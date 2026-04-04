@@ -5,6 +5,7 @@ import com.example.flightbooking.dto.BookingResponse;
 import com.example.flightbooking.exception.FlightNotFoundException;
 import com.example.flightbooking.exception.NoSeatsAvailableException;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Core booking logic with in-memory, thread-safe seat management.
  */
 @Service
+@Slf4j
 public class BookingService {
 
     /**
@@ -57,9 +59,11 @@ public class BookingService {
      */
     public BookingResponse bookTicket(BookingRequest request) {
         String flightNumber = request.flightNumber();
+        String passengerName = request.passengerName();
         AtomicInteger remainingSeats = remainingSeatsByFlight.get(flightNumber);
 
         if (remainingSeats == null) {
+            log.error("Booking failed: flight {} not found for passenger {}", flightNumber, passengerName);
             throw new FlightNotFoundException("Flight not found: " + flightNumber);
         }
 
@@ -67,6 +71,7 @@ public class BookingService {
         while (true) {
             int current = remainingSeats.get();
             if (current <= 0) {
+                log.warn("Booking rejected: no seats available on flight {} for passenger {}", flightNumber, passengerName);
                 throw new NoSeatsAvailableException("No seats available for flight: " + flightNumber);
             }
             if (remainingSeats.compareAndSet(current, current - 1)) {
@@ -74,13 +79,22 @@ public class BookingService {
             }
         }
 
+        int remainingAfterBooking = remainingSeats.get();
         String bookingId = generateBookingId();
-        return new BookingResponse(
+        BookingResponse response = new BookingResponse(
                 bookingId,
                 flightNumber,
-                request.passengerName(),
+                passengerName,
                 "Booking confirmed"
         );
+        log.info(
+                "Booking succeeded: bookingId={}, flight={}, passenger={}, remainingSeats={}",
+                bookingId,
+                flightNumber,
+                passengerName,
+                remainingAfterBooking
+        );
+        return response;
     }
 
     private String generateBookingId() {
