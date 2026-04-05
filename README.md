@@ -155,3 +155,20 @@ The system is designed so that if two users attempt to book the last seat at the
 - Any concurrent loser sees `0` and gets `NoSeatsAvailableException` (`409 Conflict`).
 
 This prevents overbooking without explicit locks and is validated by the concurrent unit test in `BookingServiceTest`.
+
+## Future Improvements
+
+- Seat type support:
+Add `seatType` (for example `ECONOMY`, `PREMIUM_ECONOMY`, `BUSINESS`) and manage inventory per flight per seat type.
+
+- Payment workflow:
+Integrate payment processing with a booking lifecycle such as `PENDING_PAYMENT -> CONFIRMED/FAILED`, ideally with async handling and retries.
+
+- Idempotency for booking requests:
+Support an idempotency key to prevent duplicate bookings when clients retry the same request.
+
+- Persistent storage:
+Move from in-memory state to a database (for example PostgreSQL) with proper transaction boundaries and optimistic locking.
+
+- API and observability enhancements:
+Add OpenAPI documentation, correlation IDs, structured logging, metrics, and integration tests for end-to-end coverage.
